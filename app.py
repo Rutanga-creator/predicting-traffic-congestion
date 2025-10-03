@@ -40,3 +40,4 @@ input_data = input_data[feature_cols]
 if st.button("Predict Congestion Level"):
     prediction = model.predict(input_data)[0]
     st.success(f"Predicted Traffic Congestion Level: {prediction}")
+
