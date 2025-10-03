@@ -1,0 +1,42 @@
+import streamlit as st
+import pandas as pd
+import joblib
+
+# Load trained model + feature columns
+model = joblib.load("traffic_model.pkl")
+feature_cols = joblib.load("feature_columns.pkl")
+
+st.title("🚦 Traffic Congestion Prediction App")
+st.write("This app predicts **traffic congestion level** based on input features.")
+
+# User inputs
+hour = st.slider("Select Hour of the Day", 0, 23, 8)
+day_of_week = st.selectbox("Day of Week (0=Mon ... 6=Sun)", [0, 1, 2, 3, 4, 5, 6])
+is_weekend = 1 if day_of_week in [5, 6] else 0
+month = st.slider("Month", 1, 12, 5)
+rush_hour = 1 if (7 <= hour <= 9) or (16 <= hour <= 19) else 0
+location = st.selectbox("Location", ["Downtown", "Suburbs", "Highway"])  # adjust to your dataset
+
+# Build input DataFrame
+input_data = pd.DataFrame({
+    "hour": [hour],
+    "day_of_week": [day_of_week],
+    "is_weekend": [is_weekend],
+    "month": [month],
+    "rush_hour": [rush_hour],
+    "location": [location]
+})
+
+# One-hot encode location
+input_data = pd.get_dummies(input_data, columns=["location"])
+
+# Ensure same columns as training
+for col in feature_cols:
+    if col not in input_data:
+        input_data[col] = 0
+input_data = input_data[feature_cols]
+
+# Predict
+if st.button("Predict Congestion Level"):
+    prediction = model.predict(input_data)[0]
+    st.success(f"Predicted Traffic Congestion Level: {prediction}")
